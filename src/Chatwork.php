@@ -3,11 +3,19 @@
 namespace SunAsterisk\Chatwork;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use SunAsterisk\Chatwork\Auth\Auth;
+use SunAsterisk\Chatwork\Exceptions\APIException;
+use SunAsterisk\Chatwork\Helpers\Message;
 use function GuzzleHttp\json_decode;
 
 /**
  * @method array me()
+ * @method array contacts()
+ * @method \SunAsterisk\Chatwork\Endpoints\IncomingRequests incomingRequests()
+ * @method \SunAsterisk\Chatwork\Endpoints\My my()
+ * @method \SunAsterisk\Chatwork\Endpoints\Room room(int $id)
+ * @method \SunAsterisk\Chatwork\Endpoints\Rooms rooms()
  */
 class Chatwork
 {
@@ -43,9 +51,18 @@ class Chatwork
     }
 
     /**
+     * @param  string $text
+     * @return Message
+     */
+    public static function message(string $text = null)
+    {
+        return new Message($text);
+    }
+
+    /**
      * @param  string $uri
      * @param  array $query
-     * @return array
+     * @return mixed
      */
     public function get(string $uri, array $query = [])
     {
@@ -57,7 +74,7 @@ class Chatwork
     /**
      * @param  string $uri
      * @param  array $data
-     * @return array
+     * @return mixed
      */
     public function post(string $uri, array $data = [])
     {
@@ -69,7 +86,7 @@ class Chatwork
     /**
      * @param  string $uri
      * @param  array $data
-     * @return array
+     * @return mixed
      */
     public function put(string $uri, array $data = [])
     {
@@ -81,7 +98,7 @@ class Chatwork
     /**
      * @param  string $uri
      * @param  array $data
-     * @return array
+     * @return mixed
      */
     public function patch(string $uri, array $data = [])
     {
@@ -93,11 +110,10 @@ class Chatwork
     /**
      * @param  string $uri
      * @param  array $query
-     * @return array
      */
     public function delete(string $uri, array $query = [])
     {
-        return $this->request('DELETE', $uri, [
+        $this->request('DELETE', $uri, [
             'query' => $query,
         ]);
     }
@@ -106,12 +122,21 @@ class Chatwork
      * @param  string $method
      * @param  string $uri
      * @param  array $options
-     * @return array
+     * @return mixed
      */
     public function request(string $method, $uri = '', array $options = [])
     {
-        $res = $this->client->request($method, $uri, $options);
+        try {
+            $res = $this->client->request($method, $uri, $options);
 
-        return json_decode($res->getBody()->getContents(), true);
+            return json_decode($res->getBody()->getContents(), true);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $body = json_decode($response->getBody()->getContents(), true);
+
+            throw new APIException($response->getStatusCode(), $body);
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
     }
 }

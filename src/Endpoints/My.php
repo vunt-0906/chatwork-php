@@ -6,7 +6,9 @@ namespace SunAsterisk\Chatwork\Endpoints;
 class My extends Endpoint
 {
     /**
-     * @return array
+     * Get number of read/unread messages & uncompleted tasks.
+     *
+     * @see http://developer.chatwork.com/vi/endpoint_my.html#GET-my-status
      */
     public function status()
     {
@@ -14,7 +16,9 @@ class My extends Endpoint
     }
 
     /**
-     * @return array
+     * Get tasks list.
+     *
+     * http://developer.chatwork.com/vi/endpoint_my.html#GET-my-tasks
      */
     public function tasks()
     {
